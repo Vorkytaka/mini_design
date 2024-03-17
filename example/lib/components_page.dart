@@ -8,13 +8,19 @@ class ComponentsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final padding = MediaQuery.maybePaddingOf(context);
     const divider = SizedBox(height: 24);
 
     return RevertBackgroundTheme(
       child: Scaffold(
         appBar: AppBar(title: const Text('Components')),
         body: ListView(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.only(
+            left: 12,
+            top: padding?.top ?? 0,
+            right: 12,
+            bottom: padding?.bottom ?? 0,
+          ),
           children: [
             const MiniGroupHeader(header: Text('SEARCH BAR')),
             const MiniSearchBar(
@@ -106,9 +112,24 @@ class ComponentsPage extends StatelessWidget {
               child: _CheckboxExample(),
             ),
             divider,
-            const MiniGroup(
-              header: Text('MINI COLOR PICKER'),
-              child: _ColorPickerExample(),
+            MiniGroup(
+              header: const Text('MINI COLOR PICKER'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const _ColorPickerExample(),
+                  const _ColorPickerExample(
+                    colors: [
+                      Colors.red,
+                      Colors.green,
+                      Colors.blue,
+                    ],
+                  ),
+                  const _ColorPickerExample(
+                    selectedColor: Colors.green,
+                  ),
+                ].interpose(const MiniGroupDivider(indent: 0)),
+              ),
             ),
           ],
         ),
@@ -170,7 +191,13 @@ class _CheckboxExampleState extends State<_CheckboxExample> {
 }
 
 class _ColorPickerExample extends StatefulWidget {
-  const _ColorPickerExample();
+  final List<Color> colors;
+  final Color? selectedColor;
+
+  const _ColorPickerExample({
+    this.colors = MiniColorPicker.primaryColors,
+    this.selectedColor,
+  });
 
   @override
   State<_ColorPickerExample> createState() => _ColorPickerExampleState();
@@ -180,8 +207,15 @@ class _ColorPickerExampleState extends State<_ColorPickerExample> {
   Color? _selectedColor;
 
   @override
+  void initState() {
+    super.initState();
+    _selectedColor = widget.selectedColor;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MiniColorPicker(
+      colors: widget.colors,
       selectedColor: _selectedColor,
       onChanged: (color) => setState(() {
         _selectedColor = color;

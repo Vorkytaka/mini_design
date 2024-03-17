@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-class MiniColorPicker extends StatelessWidget {
+const _kItemDimension = 56.0;
+
+class MiniColorPicker extends StatefulWidget {
   static const List<MaterialColor> primaryColors = <MaterialColor>[
     Colors.red,
     Colors.pink,
@@ -35,30 +37,60 @@ class MiniColorPicker extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<MiniColorPicker> createState() => _MiniColorPickerState();
+}
+
+class _MiniColorPickerState extends State<MiniColorPicker> {
+  final _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    final selectedColor = widget.selectedColor;
+    if (selectedColor != null) {
+      final i = widget.colors
+          .indexWhere((color) => color.value == selectedColor.value);
+      if (i >= 0) {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          _controller.jumpTo(i * _kItemDimension);
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // TODO(Vorkytaka): Draw colors as a grid for desktops, because we cannot scroll horizontally with mouse
-    // TODO(Vorkytaka): maybe somehow count real offset to the selected child and scroll by myself
     return SizedBox(
-      height: 56,
+      height: _kItemDimension,
       child: ScrollConfiguration(
         behavior: const ScrollBehavior().copyWith(
+          // Hack for desktop
           dragDevices: {
             PointerDeviceKind.mouse,
             PointerDeviceKind.touch,
           },
         ),
         child: ListView.builder(
-          cacheExtent: 9999,
-          itemCount: primaryColors.length,
+          controller: _controller,
+          itemExtent: _kItemDimension,
+          itemCount: widget.colors.length,
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemBuilder: (context, i) {
-            final color = primaryColors[i];
-            final isSelected = selectedColor?.value == color.value;
+            final color = widget.colors[i];
+            final isSelected = widget.selectedColor?.value == color.value;
             return _Item(
               color: color,
               isSelected: isSelected,
-              onChanged: onChanged,
+              onChanged: widget.onChanged,
             );
           },
         ),
@@ -67,7 +99,7 @@ class MiniColorPicker extends StatelessWidget {
   }
 }
 
-class _Item extends StatefulWidget {
+class _Item extends StatelessWidget {
   final Color color;
   final bool isSelected;
   final ValueChanged<Color>? onChanged;
@@ -75,75 +107,41 @@ class _Item extends StatefulWidget {
   const _Item({
     required this.color,
     required this.isSelected,
-    required this.onChanged,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  State<_Item> createState() => _ItemState();
-}
-
-class _ItemState extends State<_Item> {
-  @override
-  void initState() {
-    super.initState();
-    if (widget.isSelected) {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        Scrollable.ensureVisible(context, alignment: 0.5);
-      });
-    }
-  }
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 46,
-      height: 46,
-      child: Center(
-        child: Ink(
-          decoration: BoxDecoration(
-            color: widget.color,
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-          ),
-          child: AnimatedSize(
-            duration: kThemeChangeDuration,
-            curve: Curves.easeInOutBack,
-            child: SizedBox(
-              width: widget.isSelected ? 48 : 40,
-              height: widget.isSelected ? 48 : 40,
-              child: InkWell(
-                onTap: widget.onChanged == null
-                    ? null
-                    : () => widget.onChanged!(widget.color),
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                child: AnimatedSwitcher(
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: () => onChanged?.call(color),
+      child: SizedBox.square(
+        dimension: _kItemDimension,
+        child: Center(
+          child: SizedBox.square(
+            dimension: 48,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+              ),
+              child: Center(
+                child: AnimatedContainer(
                   duration: kThemeChangeDuration,
-                  switchInCurve: Curves.easeIn,
-                  switchOutCurve: Curves.easeOut,
-                  transitionBuilder: (child, anim) {
-                    return ScaleTransition(
-                      scale: anim,
-                      child: FadeTransition(
-                        opacity: Tween<double>(begin: 0, end: 1).animate(
-                          CurvedAnimation(
-                            parent: anim,
-                            curve: const Interval(0.5, 1),
-                          ),
-                        ),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: widget.isSelected
-                      ? Icon(
-                          Icons.done,
-                          color: ThemeData.estimateBrightnessForColor(
-                                      widget.color) ==
-                                  Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
-                        )
-                      : const SizedBox.shrink(),
+                  decoration: BoxDecoration(
+                    border: Border.fromBorderSide(
+                      isSelected
+                          ? BorderSide(
+                              color: theme.colorScheme.surface,
+                              width: 2.5,
+                            )
+                          : BorderSide.none,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  width: isSelected ? 42 : 48,
+                  height: isSelected ? 42 : 48,
                 ),
               ),
             ),
