@@ -1,7 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../base/platform.dart';
+
 const _kItemDimension = 56.0;
+
+enum MiniColorPickerMode {
+  auto,
+  scroll,
+  wrap,
+}
 
 class MiniColorPicker extends StatefulWidget {
   static const List<MaterialColor> primaryColors = <MaterialColor>[
@@ -28,12 +37,14 @@ class MiniColorPicker extends StatefulWidget {
   final List<Color> colors;
   final Color? selectedColor;
   final ValueChanged<Color>? onChanged;
+  final MiniColorPickerMode mode;
 
   const MiniColorPicker({
     Key? key,
     this.colors = primaryColors,
     this.selectedColor,
     this.onChanged,
+    this.mode = MiniColorPickerMode.auto,
   }) : super(key: key);
 
   @override
@@ -67,7 +78,40 @@ class _MiniColorPickerState extends State<MiniColorPicker> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO(Vorkytaka): Draw colors as a grid for desktops, because we cannot scroll horizontally with mouse
+    final bool isWrap;
+    if (widget.mode == MiniColorPickerMode.wrap) {
+      isWrap = true;
+    } else if (widget.mode == MiniColorPickerMode.scroll) {
+      isWrap = false;
+    } else {
+      // We use wrap for desktop platform
+      // because of problems with horizontal scroll with mouse
+      isWrap = defaultTargetPlatform.isDesktop;
+    }
+
+    Widget buildItem(int i) {
+      final color = widget.colors[i];
+      final isSelected = widget.selectedColor?.value == color.value;
+
+      return _Item(
+        color: color,
+        isSelected: isSelected,
+        onChanged: widget.onChanged,
+      );
+    }
+
+    if (isWrap) {
+      return SizedBox(
+        width: double.infinity,
+        child: Wrap(
+          alignment: WrapAlignment.spaceAround,
+          children: [
+            for (int i = 0; i < widget.colors.length; i++) buildItem(i),
+          ],
+        ),
+      );
+    }
+
     return SizedBox(
       height: _kItemDimension,
       child: ScrollConfiguration(
@@ -76,6 +120,7 @@ class _MiniColorPickerState extends State<MiniColorPicker> {
           dragDevices: {
             PointerDeviceKind.mouse,
             PointerDeviceKind.touch,
+            PointerDeviceKind.trackpad,
           },
         ),
         child: ListView.builder(
@@ -84,15 +129,7 @@ class _MiniColorPickerState extends State<MiniColorPicker> {
           itemCount: widget.colors.length,
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemBuilder: (context, i) {
-            final color = widget.colors[i];
-            final isSelected = widget.selectedColor?.value == color.value;
-            return _Item(
-              color: color,
-              isSelected: isSelected,
-              onChanged: widget.onChanged,
-            );
-          },
+          itemBuilder: (context, i) => buildItem(i),
         ),
       ),
     );

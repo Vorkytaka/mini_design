@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_design/mini_design.dart';
 
@@ -128,6 +129,11 @@ class ComponentsPage extends StatelessWidget {
                   const _ColorPickerExample(
                     selectedColor: Colors.green,
                   ),
+                  _ColorPickerExample(
+                    mode: defaultTargetPlatform.isDesktop
+                        ? MiniColorPickerMode.scroll
+                        : MiniColorPickerMode.wrap,
+                  ),
                 ].interpose(const MiniGroupDivider(indent: 0)),
               ),
             ),
@@ -193,10 +199,12 @@ class _CheckboxExampleState extends State<_CheckboxExample> {
 class _ColorPickerExample extends StatefulWidget {
   final List<Color> colors;
   final Color? selectedColor;
+  final MiniColorPickerMode mode;
 
   const _ColorPickerExample({
     this.colors = MiniColorPicker.primaryColors,
     this.selectedColor,
+    this.mode = MiniColorPickerMode.auto,
   });
 
   @override
@@ -215,6 +223,7 @@ class _ColorPickerExampleState extends State<_ColorPickerExample> {
   @override
   Widget build(BuildContext context) {
     return MiniColorPicker(
+      mode: widget.mode,
       colors: widget.colors,
       selectedColor: _selectedColor,
       onChanged: (color) => setState(() {
