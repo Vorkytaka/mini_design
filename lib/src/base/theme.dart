@@ -38,6 +38,7 @@ extension BrightnessUtils on Brightness {
 ThemeData miniThemeFactory({
   required Brightness brightness,
   required Color primaryColor,
+  Iterable<ThemeExtension<dynamic>>? extensions,
 }) {
   final isDark = brightness == Brightness.dark;
 
@@ -98,8 +99,13 @@ ThemeData miniThemeFactory({
     ),
     checkboxTheme: CheckboxThemeData(
       shape: const ContinuousRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12))),
-      checkColor: MaterialStateProperty.all(colorScheme.onPrimary),
+        borderRadius: BorderRadius.all(
+          Radius.circular(12),
+        ),
+      ),
+      checkColor: MaterialStateProperty.all(
+        colorScheme.onPrimary,
+      ),
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: isDark ? Colors.grey.shade100 : Colors.grey.shade900,
@@ -124,7 +130,7 @@ ThemeData miniThemeFactory({
         ),
       ),
     ),
-    primaryColor: Colors.blue,
+    primaryColor: primaryColor,
     dialogBackgroundColor: colorScheme.background,
     inputDecorationTheme: InputDecorationTheme(
       fillColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
@@ -132,12 +138,7 @@ ThemeData miniThemeFactory({
         color: isDark ? _iosLabelSecondaryDark : _iosLabelSecondaryLight,
       ),
     ),
-    extensions: {
-      MiniColorScheme(
-        todayHighlightColor:
-            isDark ? Colors.green.shade500 : Colors.green.shade700,
-      ),
-    },
+    extensions: extensions,
   );
 }
 
@@ -218,44 +219,6 @@ TextTheme generateTextTheme({
       fontWeight: FontWeight.w500,
     ),
   );
-}
-
-@immutable
-class MiniColorScheme extends ThemeExtension<MiniColorScheme> {
-  /// Color that used on date(time) fields when date is today and time is not overdue.
-  final Color todayHighlightColor;
-
-  const MiniColorScheme({
-    required this.todayHighlightColor,
-  });
-
-  @override
-  ThemeExtension<MiniColorScheme> copyWith({
-    Color? todayHighlightColor,
-  }) =>
-      MiniColorScheme(
-        todayHighlightColor: todayHighlightColor ?? this.todayHighlightColor,
-      );
-
-  @override
-  ThemeExtension<MiniColorScheme> lerp(MiniColorScheme? other, double t) {
-    if (other == null) {
-      return this;
-    }
-
-    return MiniColorScheme(
-      todayHighlightColor: Color.lerp(
-            todayHighlightColor,
-            other.todayHighlightColor,
-            t,
-          ) ??
-          other.todayHighlightColor,
-    );
-  }
-}
-
-extension MiniColorSchemeTheme on ThemeData {
-  MiniColorScheme get miniColorScheme => extension<MiniColorScheme>()!;
 }
 
 /// Our mapping to the right [TextStyle]
