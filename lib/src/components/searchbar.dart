@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MiniSearchBar extends StatelessWidget {
-  final Widget? leadingIcon;
+  final Widget? leading;
   final bool readOnly;
   final bool autofocus;
   final ValueChanged<String?>? onChanged;
@@ -11,7 +11,7 @@ class MiniSearchBar extends StatelessWidget {
 
   const MiniSearchBar({
     Key? key,
-    this.leadingIcon,
+    this.leading,
     this.readOnly = false,
     this.autofocus = false,
     this.onChanged,
@@ -32,7 +32,7 @@ class MiniSearchBar extends StatelessWidget {
         ),
         hintText: hint,
         filled: true,
-        prefixIcon: leadingIcon ?? const Icon(Icons.search),
+        prefixIcon: leading ?? const Icon(Icons.search),
         // constraints: BoxConstraints(minHeight: 48, maxHeight: 48),
         contentPadding: EdgeInsets.zero,
         suffixIcon: trailing,
